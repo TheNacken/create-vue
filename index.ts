@@ -39,6 +39,7 @@ const FEATURE_FLAGS = [
   'playwright',
   'eslint',
   'prettier',
+  'tailwind',
   'eslint-with-oxlint',
   'eslint-with-prettier',
 ] as const
@@ -75,6 +76,10 @@ const FEATURE_OPTIONS = [
   {
     value: 'prettier',
     label: language.needsPrettier.message,
+  },
+  {
+    value: 'tailwind',
+    label: language.needsTailwind.message,
   },
 ] as const
 
@@ -183,6 +188,8 @@ Available feature flags:
     Add Prettier for code formatting in addition to ESLint.
   --prettier
     Add Prettier for code formatting.
+  --tailwind
+    Add Tailwind CSS for styling.
 
 Unstable feature flags:
   --tests, --with-tests
@@ -346,6 +353,7 @@ async function init() {
     features.includes('eslint')
   const needsPrettier =
     argv.prettier || argv['eslint-with-prettier'] || features.includes('prettier')
+  const needsTailwind = argv.tailwind || features.includes('tailwind')
   const needsOxlint = argv['eslint-with-oxlint'] || result.experimentOxlint
 
   const { e2eFramework } = result
@@ -492,6 +500,10 @@ async function init() {
     render('config/prettier')
   }
 
+  if (needsTailwind) {
+    render('config/tailwind')
+  }
+
   // Render code template.
   // prettier-ignore
   const codeTemplate =
@@ -500,12 +512,20 @@ async function init() {
   render(`code/${codeTemplate}`)
 
   // Render entry file (main.js/ts).
-  if (needsPinia && needsRouter) {
+  if (needsPinia && needsRouter && needsTailwind) {
+    render('entry/router-and-pinia-and-tailwind')
+  } else if (needsRouter && needsPinia) {
     render('entry/router-and-pinia')
+  } else if (needsRouter && needsTailwind) {
+    render('entry/router-and-tailwind')
+  } else if (needsPinia && needsTailwind) {
+    render('entry/pinia-and-tailwind')
   } else if (needsPinia) {
     render('entry/pinia')
   } else if (needsRouter) {
     render('entry/router')
+  } else if (needsTailwind) {
+    render('entry/tailwind')
   } else {
     render('entry/default')
   }
