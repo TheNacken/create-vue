@@ -504,6 +504,10 @@ async function init() {
     render('config/eslint')
   }
 
+  if (needsOxlint) {
+    render('config/oxlint')
+  }
+
   if (needsPrettier) {
     render('config/prettier')
   }
