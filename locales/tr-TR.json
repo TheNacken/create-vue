@@ -45,6 +45,9 @@
   "needsTailwind": {
     "message": "Tailwind CSS (yardımcı ilk CSS çerçevesi)"
   },
+  "needsCommitlint": {
+    "message": "Commitlint (geleneksel commit mesajları)"
+  },
   "e2eSelection": {
     "message": "Bir Uçtan Uca test çerçevesi seçin:",
     "hint": "(↑/↓ gezinmek için, enter onaylamak için)",

@@ -45,6 +45,9 @@
   "needsTailwind": {
     "message": "Tailwind CSS（实用优先的 CSS 框架）"
   },
+  "needsCommitlint": {
+    "message": "Commitlint（约定式提交消息）"
+  },
   "e2eSelection": {
     "message": "选择一个端到端测试框架：",
     "hint": "(↑/↓ 切换，回车确认)",

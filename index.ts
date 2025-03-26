@@ -40,6 +40,7 @@ const FEATURE_FLAGS = [
   'eslint',
   'prettier',
   'tailwind',
+  'commitlint',
   'eslint-with-oxlint',
   'eslint-with-prettier',
 ] as const
@@ -80,6 +81,10 @@ const FEATURE_OPTIONS = [
   {
     value: 'tailwind',
     label: language.needsTailwind.message,
+  },
+  {
+    value: 'commitlint',
+    label: language.needsCommitlint.message,
   },
 ] as const
 
@@ -190,6 +195,8 @@ Available feature flags:
     Add Prettier for code formatting.
   --tailwind
     Add Tailwind CSS for styling.
+  --commitlint
+    Add Commitlint for commit message linting.
 
 Unstable feature flags:
   --tests, --with-tests
@@ -354,6 +361,7 @@ async function init() {
   const needsPrettier =
     argv.prettier || argv['eslint-with-prettier'] || features.includes('prettier')
   const needsTailwind = argv.tailwind || features.includes('tailwind')
+  const needsCommitlint = argv.commitlint || features.includes('commitlint')
   const needsOxlint = argv['eslint-with-oxlint'] || result.experimentOxlint
 
   const { e2eFramework } = result
@@ -502,6 +510,10 @@ async function init() {
 
   if (needsTailwind) {
     render('config/tailwind')
+  }
+
+  if (needsCommitlint) {
+    render('config/commitlint')
   }
 
   // Render code template.

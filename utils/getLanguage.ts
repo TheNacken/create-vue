@@ -32,6 +32,7 @@ interface Language {
   needsEslint: LanguageItem
   needsPrettier: LanguageItem
   needsTailwind: LanguageItem
+  needsCommitlint: LanguageItem
   e2eSelection: LanguageItem & {
     selectOptions?: {
       [key: string]: { title: string; desc?: string; hintOnComponentTesting?: string }

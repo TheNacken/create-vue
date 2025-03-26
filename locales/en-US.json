@@ -45,6 +45,9 @@
   "needsTailwind": {
     "message": "Tailwind CSS (utility-first CSS framework)"
   },
+  "needsCommitlint": {
+    "message": "Commitlint (conventional commit messages)"
+  },
   "e2eSelection": {
     "message": "Select an End-to-End testing framework:",
     "hint": "(↑/↓ to navigate, enter to confirm)",
