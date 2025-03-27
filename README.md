@@ -1,4 +1,4 @@
-# create-vue <a href="https://npmjs.com/package/create-vue-enhanced"><img src="https://badgen.net/npm/v/create-vue-enhanced" alt="npm package"></a> <a href="https://nodejs.org/en/about/previous-releases"><img src="https://img.shields.io/node/v/create-vue-enhanced" alt="node compatibility"></a>
+# create-vue-enhanced <a href="https://npmjs.com/package/create-vue-enhanced"><img src="https://badgen.net/npm/v/create-vue-enhanced" alt="npm package"></a> <a href="https://nodejs.org/en/about/previous-releases"><img src="https://img.shields.io/node/v/create-vue-enhanced" alt="node compatibility"></a>
 
 The enhanced way to start a Vite-powered Vue project
 
