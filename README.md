@@ -13,7 +13,7 @@ This repository is a fork of [vuejs/create-vue](https://github.com/vuejs/create-
 To create a new Vue project using `create-vue-enhanced`, simply run the following command in your terminal:
 
 ```sh
-npm create vue enhanced@latest
+npx create-vue-enhanced@latest
 ```
 
 > [!IMPORTANT]
@@ -22,7 +22,7 @@ npm create vue enhanced@latest
 By default, the command runs in interactive mode with prompts. You can skip these prompts by providing feature flags as CLI arguments. To see all available feature flags and options:
 
 ```sh
-npm create vue enhanced@latest -- --help
+npx create-vue-enhanced@latest -- --help
 ```
 
 This will show you various feature flags (like `--typescript`, `--router`) and options (like `--bare` for creating a project with minimal boilerplate).
@@ -34,7 +34,7 @@ This will show you various feature flags (like `--typescript`, `--router`) and o
 If you need to support IE11, you can create a Vue 2 project with:
 
 ```sh
-npm create vue@legacy
+npx create-vue-enhanced@legacy
 ```
 
 > [!WARNING]  
