@@ -1,17 +1,19 @@
-# create-vue <a href="https://npmjs.com/package/create-vue"><img src="https://badgen.net/npm/v/create-vue" alt="npm package"></a> <a href="https://nodejs.org/en/about/previous-releases"><img src="https://img.shields.io/node/v/create-vue" alt="node compatibility"></a>
+# create-vue-enhanced <a href="https://npmjs.com/package/create-vue-enhanced"><img src="https://badgen.net/npm/v/create-vue-enhanced" alt="npm package"></a> <a href="https://nodejs.org/en/about/previous-releases"><img src="https://img.shields.io/node/v/create-vue-enhanced" alt="node compatibility"></a>
 
-The recommended way to start a Vite-powered Vue project
+The enhanced way to start a Vite-powered Vue project
+
+This repository is a fork of [vuejs/create-vue](https://github.com/vuejs/create-vue) that adds some new options like Tailwind CSS or Commitlint to the setup.
 
 <p align="center">
-  <img width="898" alt="Screencast from terminal" src="https://github.com/vuejs/create-vue/blob/main/media/screencast-cli.gif?raw=true">
+  <img width="898" alt="Screencast from terminal" src="https://github.com/vuejs/create-vue-enhanced/blob/main/media/screencast-cli.gif?raw=true">
 </p>
 
 ## Usage
 
-To create a new Vue project using `create-vue`, simply run the following command in your terminal:
+To create a new Vue project using `create-vue-enhanced`, simply run the following command in your terminal:
 
 ```sh
-npm create vue@latest
+npx create-vue-enhanced@latest
 ```
 
 > [!IMPORTANT]
@@ -20,19 +22,19 @@ npm create vue@latest
 By default, the command runs in interactive mode with prompts. You can skip these prompts by providing feature flags as CLI arguments. To see all available feature flags and options:
 
 ```sh
-npm create vue@latest -- --help
+npx create-vue-enhanced@latest -- --help
 ```
 
 This will show you various feature flags (like `--typescript`, `--router`) and options (like `--bare` for creating a project with minimal boilerplate).
 
-**PowerShell users:** You'll need to quote the double dashes: `npm create vue@latest '--' --help`
+**PowerShell users:** You'll need to quote the double dashes: `npm create vue enhanced@latest '--' --help`
 
 ### Creating Vue 2 Projects
 
 If you need to support IE11, you can create a Vue 2 project with:
 
 ```sh
-npm create vue@legacy
+npx create-vue-enhanced@legacy
 ```
 
 > [!WARNING]  
