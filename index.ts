@@ -2,7 +2,7 @@
 
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-
+import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 import { intro, outro, text, confirm, multiselect, select, isCancel, cancel } from '@clack/prompts'
 import { red, green, cyan, bold, dim } from 'picocolors'
@@ -19,9 +19,9 @@ import getLanguage from './utils/getLanguage'
 import renderEslint from './utils/renderEslint'
 import { trimBoilerplate, removeCSSImport, emptyRouterConfig } from './utils/trimBoilerplate'
 
-import cliPackageJson from './package.json'
+import cliPackageJson from './package.json' with { type: 'json' }
 
-const language = getLanguage()
+const language = await getLanguage(fileURLToPath(new URL('./locales', import.meta.url)))
 
 const FEATURE_FLAGS = [
   'default',
@@ -384,11 +384,7 @@ async function init() {
   const pkg = { name: result.packageName, version: '0.0.0' }
   fs.writeFileSync(path.resolve(root, 'package.json'), JSON.stringify(pkg, null, 2))
 
-  // todo:
-  // work around the esbuild issue that `import.meta.url` cannot be correctly transpiled
-  // when bundling for node and the format is cjs
-  // const templateRoot = new URL('./template', import.meta.url).pathname
-  const templateRoot = path.resolve(__dirname, 'template')
+  const templateRoot = fileURLToPath(new URL('./template', import.meta.url))
   const callbacks = []
   const render = function render(templateName) {
     const templateDir = path.resolve(templateRoot, templateName)

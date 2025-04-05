@@ -1,15 +1,15 @@
 {
   "name": "create-vue-enhanced",
-  "version": "3.15.3",
+  "version": "3.16.3",
   "description": "🛠️ The recommended way to start a Vite-powered Vue project",
   "type": "module",
-  "packageManager": "pnpm@10.6.5",
+  "packageManager": "pnpm@10.7.0",
   "bin": {
-    "create-vue": "outfile.cjs"
+    "create-vue": "bundle.js"
   },
   "files": [
     "locales",
-    "outfile.cjs",
+    "bundle.js",
     "template",
     "!template/**/node_modules/.bin/*"
   ],
@@ -19,11 +19,12 @@
   "scripts": {
     "prepare": "husky",
     "format": "prettier --write .",
-    "build": "zx ./scripts/build.mjs",
+    "build": "rolldown -c rolldown.config.ts",
     "snapshot": "zx ./scripts/snapshot.mjs",
     "pretest": "pnpm run build && pnpm run snapshot",
     "test": "zx ./scripts/test.mjs",
     "test:unit": "vitest",
+    "preversion": "git fetch && git status -uno | grep -q 'Your branch is up to date'",
     "postversion": "zx ./scripts/postversion.mjs",
     "prepublishOnly": "pnpm run build"
   },
@@ -42,18 +43,18 @@
     "@clack/prompts": "^0.10.0",
     "@tsconfig/node22": "^22.0.1",
     "@types/eslint": "^9.6.1",
-    "@types/node": "^22.13.11",
+    "@types/node": "^22.13.14",
     "@types/prompts": "^2.4.9",
     "@vue/create-eslint-config": "^0.10.1",
     "@vue/tsconfig": "^0.7.0",
     "ejs": "^3.1.10",
-    "esbuild": "^0.25.1",
-    "esbuild-plugin-license": "^1.2.3",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.0",
     "picocolors": "^1.1.1",
     "prettier": "3.5.3",
-    "vitest": "^3.0.9",
+    "rolldown": "1.0.0-beta.7",
+    "rollup-plugin-license": "^3.6.0",
+    "vitest": "^3.1.1",
     "zx": "^8.4.1"
   },
   "lint-staged": {
