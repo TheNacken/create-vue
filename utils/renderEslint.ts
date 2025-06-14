@@ -48,7 +48,29 @@ export default function renderEslint(
   // write to eslint.config.js, .prettierrc.json, .editorconfig, etc.
   for (const [fileName, content] of Object.entries(files)) {
     const fullPath = path.resolve(rootDir, fileName)
-    fs.writeFileSync(fullPath, content as string, 'utf8')
+
+    // Fix TypeScript compatibility issues with ESLint config
+    let fileContent = content as string
+
+    if (fileName === 'eslint.config.ts' && needsTypeScript) {
+      // Fix compatibility issues between ESLint types and TypeScript-ESLint types
+      // Add a type assertion to ensure ecmaVersion is properly typed
+      fileContent = fileContent.replace(
+        /import { defineFlatConfig } from '@typescript-eslint\/eslint-plugin'/,
+        `import { defineFlatConfig } from '@typescript-eslint/eslint-plugin'\nimport type { Linter } from 'eslint'`,
+      )
+
+      // Add explicit type casting to prevent TypeScript errors with ESLint configuration objects
+      fileContent = fileContent.replace(
+        /export default \[([\s\S]*?)\]/s,
+        `export default [
+  // @ts-expect-error: Type compatibility between ESLint and TypeScript-ESLint
+  $1
+] as const`,
+      )
+    }
+
+    fs.writeFileSync(fullPath, fileContent, 'utf8')
   }
 }
 
@@ -102,7 +124,9 @@ export function getAdditionalConfigs({
             (needsTypeScript
               ? `// eslint-disable-next-line @typescript-eslint/ban-ts-comment\n` +
                 `// @ts-ignore\n`
-              : '') + "import pluginCypress from 'eslint-plugin-cypress'",
+              : '') +
+            "import pluginCypress from 'eslint-plugin-cypress'" +
+            (needsTypeScript ? '/flat' : ''),
           content: `
   {
     ...pluginCypress.configs.recommended,

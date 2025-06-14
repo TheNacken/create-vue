@@ -103,4 +103,28 @@ describe('renderEslint', () => {
       "files: ['e2e/**/*.{test,spec}.{js,ts,jsx,tsx}']",
     )
   })
+
+  it('should get additional dependencies and config with for cypress with TypeScript', () => {
+    const additionalConfigs = getAdditionalConfigs({
+      needsTypeScript: true,
+      needsVitest: false,
+      needsCypress: true,
+      needsCypressCT: false,
+      needsPlaywright: false,
+    })
+    expect(additionalConfigs).toHaveLength(1)
+    const [additionalCypressConfig] = additionalConfigs
+    expect(additionalCypressConfig.devDependencies['eslint-plugin-cypress']).not.toBeUndefined()
+    expect(additionalCypressConfig.afterVuePlugin).toHaveLength(1)
+    const [additionalCypressPlugin] = additionalCypressConfig.afterVuePlugin!
+    expect(additionalCypressPlugin.importer).toContain('// @ts-ignore')
+    expect(additionalCypressPlugin.importer).toContain(
+      "import pluginCypress from 'eslint-plugin-cypress/flat'",
+    )
+    expect(additionalCypressPlugin.content).toContain('...pluginCypress.configs.recommended')
+    expect(additionalCypressPlugin.content).toContain(
+      "'cypress/e2e/**/*.{cy,spec}.{js,ts,jsx,tsx}'",
+    )
+    expect(additionalCypressPlugin.content).toContain("'cypress/support/**/*.{js,ts,jsx,tsx}'")
+  })
 })
