@@ -3,7 +3,7 @@
   "version": "3.16.5",
   "description": "🛠️ The enhanced way to start a Vite-powered Vue project",
   "type": "module",
-  "packageManager": "pnpm@10.8.0",
+  "packageManager": "pnpm@10.12.1",
   "bin": {
     "create-vue": "bundle.js"
   },
@@ -14,7 +14,7 @@
     "!template/**/node_modules/.bin/*"
   ],
   "engines": {
-    "node": ">=v18.3.0"
+    "node": ">=v20.0.0"
   },
   "devEngines": {
     "packageManager": {
@@ -47,22 +47,22 @@
   },
   "homepage": "https://github.com/TheNacken/create-vue#readme",
   "devDependencies": {
-    "@clack/prompts": "^0.10.1",
-    "@tsconfig/node22": "^22.0.1",
+    "@clack/prompts": "^0.11.0",
+    "@tsconfig/node22": "^22.0.2",
     "@types/eslint": "^9.6.1",
-    "@types/node": "^22.14.1",
+    "@types/node": "^22.15.31",
     "@types/prompts": "^2.4.9",
-    "@vue/create-eslint-config": "^0.10.1",
+    "@vue/create-eslint-config": "^0.10.2",
     "@vue/tsconfig": "^0.7.0",
     "ejs": "^3.1.10",
     "husky": "^9.1.7",
-    "lint-staged": "^15.5.1",
+    "lint-staged": "^15.5.2",
     "picocolors": "^1.1.1",
     "prettier": "3.5.3",
-    "rolldown": "1.0.0-beta.7",
+    "rolldown": "1.0.0-beta.15",
     "rollup-plugin-license": "^3.6.0",
-    "vitest": "^3.1.1",
-    "zx": "^8.5.2"
+    "vitest": "^3.2.3",
+    "zx": "^8.5.5"
   },
   "lint-staged": {
     "*.{js,ts,vue,json}": [
