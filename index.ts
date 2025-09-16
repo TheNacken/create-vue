@@ -12,7 +12,11 @@ import ejs from 'ejs'
 import * as banners from './utils/banners'
 
 import renderTemplate from './utils/renderTemplate'
-import { postOrderDirectoryTraverse, preOrderDirectoryTraverse } from './utils/directoryTraverse'
+import {
+  postOrderDirectoryTraverse,
+  preOrderDirectoryTraverse,
+  dotGitDirectoryState,
+} from './utils/directoryTraverse'
 import generateReadme from './utils/generateReadme'
 import getCommand from './utils/getCommand'
 import getLanguage from './utils/getLanguage'
@@ -43,6 +47,8 @@ const FEATURE_FLAGS = [
   'commitlint',
   'eslint-with-oxlint',
   'eslint-with-prettier',
+  'oxlint',
+  'rolldown-vite',
 ] as const
 
 const FEATURE_OPTIONS = [
@@ -87,6 +93,16 @@ const FEATURE_OPTIONS = [
     label: language.needsCommitlint.message,
   },
 ] as const
+const EXPERIMENTAL_FEATURE_OPTIONS = [
+  {
+    value: 'oxlint',
+    label: language.needsOxlint.message,
+  },
+  {
+    value: 'rolldown-vite',
+    label: language.needsRolldownVite.message,
+  },
+] as const
 
 type PromptResult = {
   projectName?: string
@@ -94,7 +110,8 @@ type PromptResult = {
   packageName?: string
   features?: (typeof FEATURE_OPTIONS)[number]['value'][]
   e2eFramework?: 'cypress' | 'nightwatch' | 'playwright'
-  experimentOxlint?: boolean
+  experimentFeatures?: (typeof EXPERIMENTAL_FEATURE_OPTIONS)[number]['value'][]
+  needsBareboneTemplates?: boolean
 }
 
 function isValidPackageName(projectName) {
@@ -120,6 +137,7 @@ function canSkipEmptying(dir: string) {
     return true
   }
   if (files.length === 1 && files[0] === '.git') {
+    dotGitDirectoryState.hasDotGitDirectory = true
     return true
   }
 
@@ -187,12 +205,14 @@ Available feature flags:
     If used without ${cyan('--vitest')}, it will also add Nightwatch Component Testing.
   --eslint
     Add ESLint for code quality.
-  --eslint-with-oxlint
-    Add ESLint for code quality, and use Oxlint to speed up the linting process.
   --eslint-with-prettier (Deprecated in favor of ${cyan('--eslint --prettier')})
     Add Prettier for code formatting in addition to ESLint.
   --prettier
     Add Prettier for code formatting.
+  --oxlint
+    Add Oxlint for code quality and formatting.
+  --rolldown-vite
+    Use Rolldown Vite instead of Vite for building the project.
   --tailwind
     Add Tailwind CSS for styling.
   --commitlint
@@ -246,7 +266,10 @@ async function init() {
     packageName: defaultProjectName,
     features: [],
     e2eFramework: undefined,
-    experimentOxlint: false,
+    experimentFeatures: [],
+
+    // TODO: default to true sometime in the future
+    needsBareboneTemplates: false,
   }
 
   intro(
@@ -260,8 +283,11 @@ async function init() {
       text({
         message: language.projectName.message,
         placeholder: defaultProjectName,
+        defaultValue: defaultProjectName,
         validate: (value) =>
-          value.trim().length > 0 ? undefined : language.projectName.invalidMessage,
+          value.length === 0 || value.trim().length > 0
+            ? undefined
+            : language.projectName.invalidMessage,
       }),
     )
     targetDir = result.projectName = result.packageName = _result.trim()
@@ -335,34 +361,42 @@ async function init() {
         }),
       )
     }
-
-    if (result.features.includes('eslint')) {
-      result.experimentOxlint = await unwrapPrompt(
-        confirm({
-          message: language.needsOxlint.message,
-          initialValue: false,
-        }),
-      )
-    }
+    result.experimentFeatures = await unwrapPrompt(
+      multiselect({
+        message: `${language.needsExperimentalFeatures.message} ${dim(language.needsExperimentalFeatures.hint)}`,
+        // @ts-expect-error @clack/prompt's type doesn't support readonly array yet
+        options: EXPERIMENTAL_FEATURE_OPTIONS,
+        required: false,
+      }),
+    )
   }
 
-  const { features } = result
+  if (argv.bare) {
+    result.needsBareboneTemplates = true
+  } else if (!isFeatureFlagsUsed) {
+    result.needsBareboneTemplates = await unwrapPrompt(
+      confirm({
+        message: language.needsBareboneTemplates.message,
+        // TODO: default to true sometime in the future
+        initialValue: false,
+      }),
+    )
+  }
+
+  const { features, experimentFeatures, needsBareboneTemplates } = result
 
   const needsTypeScript = argv.ts || argv.typescript || features.includes('typescript')
   const needsJsx = argv.jsx || features.includes('jsx')
   const needsRouter = argv.router || argv['vue-router'] || features.includes('router')
   const needsPinia = argv.pinia || features.includes('pinia')
   const needsVitest = argv.vitest || argv.tests || features.includes('vitest')
-  const needsEslint =
-    argv.eslint ||
-    argv['eslint-with-oxlint'] ||
-    argv['eslint-with-prettier'] ||
-    features.includes('eslint')
+  const needsEslint = argv.eslint || argv['eslint-with-prettier'] || features.includes('eslint')
   const needsPrettier =
     argv.prettier || argv['eslint-with-prettier'] || features.includes('prettier')
   const needsTailwind = argv.tailwind || features.includes('tailwind')
   const needsCommitlint = argv.commitlint || features.includes('commitlint')
-  const needsOxlint = argv['eslint-with-oxlint'] || result.experimentOxlint
+  const needsOxlint = experimentFeatures.includes('oxlint') || argv['oxlint']
+  const needsRolldownVite = experimentFeatures.includes('rolldown-vite') || argv['rolldown-vite']
 
   const { e2eFramework } = result
   const needsCypress = argv.cypress || argv.tests || e2eFramework === 'cypress'
@@ -389,6 +423,13 @@ async function init() {
   const render = function render(templateName) {
     const templateDir = path.resolve(templateRoot, templateName)
     renderTemplate(templateDir, root, callbacks)
+  }
+  const replaceVite = () => {
+    const content = fs.readFileSync(path.resolve(root, 'package.json'), 'utf-8')
+    const json = JSON.parse(content)
+    // Replace `vite` with `rolldown-vite` if the feature is enabled
+    json.devDependencies.vite = 'npm:rolldown-vite@latest'
+    fs.writeFileSync(path.resolve(root, 'package.json'), JSON.stringify(json, null, 2))
   }
   // Render base template
   render('base')
@@ -487,7 +528,7 @@ async function init() {
   }
 
   // Render ESLint config
-  if (needsEslint) {
+  if (needsEslint || needsOxlint) {
     renderEslint(root, {
       needsTypeScript,
       needsOxlint,
@@ -506,6 +547,11 @@ async function init() {
 
   if (needsPrettier) {
     render('config/prettier')
+  }
+
+  // use rolldown-vite if the feature is enabled
+  if (needsRolldownVite) {
+    replaceVite()
   }
 
   if (needsTailwind) {
@@ -565,7 +611,7 @@ async function init() {
     },
   )
 
-  if (argv.bare) {
+  if (needsBareboneTemplates) {
     trimBoilerplate(root)
     render('bare/base')
     // TODO: refactor the `render` utility to avoid this kind of manual mapping?
@@ -632,7 +678,7 @@ async function init() {
     )
   }
 
-  if (argv.bare) {
+  if (needsBareboneTemplates) {
     removeCSSImport(root, needsTypeScript, needsCypressCT)
     if (needsRouter) {
       emptyRouterConfig(root, needsTypeScript)
@@ -678,10 +724,12 @@ async function init() {
   }
   outroMessage += `   ${bold(green(getCommand(packageManager, 'dev')))}\n`
 
-  outroMessage += `
+  if (!dotGitDirectoryState.hasDotGitDirectory) {
+    outroMessage += `
 ${dim('|')} ${language.infos.optionalGitCommand}
-   
+  
    ${bold(green('git init && git add -A && git commit -m "initial commit"'))}`
+  }
 
   outro(outroMessage)
 }

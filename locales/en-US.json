@@ -66,7 +66,20 @@
     }
   },
   "needsOxlint": {
-    "message": "Install Oxlint for faster linting? (experimental)"
+    "message": "Oxlint"
+  },
+  "needsExperimental": {
+    "message": "Enable experimental features"
+  },
+  "needsExperimentalFeatures": {
+    "message": "Select experimental features to include in your project:",
+    "hint": "(↑/↓ to navigate, space to select, a to toggle all, enter to confirm)"
+  },
+  "needsRolldownVite": {
+    "message": "rolldown-vite (experimental)"
+  },
+  "needsBareboneTemplates": {
+    "message": "Skip all example code and start with a blank Vue project?"
   },
   "errors": {
     "operationCancelled": "Operation cancelled"

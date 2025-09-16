@@ -66,7 +66,20 @@
     }
   },
   "needsOxlint": {
-    "message": "Daha hızlı linting için Oxlint eklensin mi? (deneysel)"
+    "message": "Oxlint"
+  },
+  "needsExperimental": {
+    "message": "Deneysel özellikleri etkinleştir"
+  },
+  "needsExperimentalFeatures": {
+    "message": "Dahil edilecek deneysel özellikleri seçin:",
+    "hint": "(↑/↓ gezinmek için, boşluk seçmek için, a tümünü seçmek için, enter onaylamak için)"
+  },
+  "needsRolldownVite": {
+    "message": "rolldown-vite (deneysel)"
+  },
+  "needsBareboneTemplates": {
+    "message": "Tüm örnek kodları atlayıp boş bir Vue projesi ile başlansın mı?"
   },
   "errors": {
     "operationCancelled": "İşlem iptal edildi"

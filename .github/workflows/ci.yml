@@ -18,11 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     name: Build the package
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
       - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: 'pnpm'
@@ -49,7 +49,7 @@ jobs:
     needs: build
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        node-version: [20, 22, 24]
         os: [ubuntu-latest, windows-latest, macos-latest]
         verification-script:
           - pnpm --filter '!*typescript*' build
@@ -65,11 +65,11 @@ jobs:
       CYPRESS_INSTALL_BINARY: 0
       CHROMEDRIVER_SKIP_DOWNLOAD: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
       - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
@@ -83,7 +83,9 @@ jobs:
         run: pnpm install
       - name: Install dependencies in playground
         working-directory: ./playground
-        run: pnpm install --no-frozen-lockfile --ignore-scripts
+        run: |
+          pnpm install --no-frozen-lockfile --ignore-scripts
+          pnpm dedupe --ignore-scripts
 
       - name: Run build script in playground
         working-directory: ./playground
@@ -96,23 +98,28 @@ jobs:
         e2e-framework: ['cypress', 'playwright']
         node-version: [22]
         os: [ubuntu-latest, windows-latest, macos-latest]
+        exclude:
+          # Temporarily exclude Windows + Cypress due to EPERM issues with start-server-and-test
+          # FIXME: move away from `start-server-and-test`
+          - os: windows-latest
+            e2e-framework: cypress
     runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.os == 'windows-latest' }}
     env:
       # Sometimes the Linux runner can't verify Cypress in 30s
       CYPRESS_VERIFY_TIMEOUT: 60000
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
       - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
 
       # use artifacts to share the playground across different jobs
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: build-output
 
@@ -120,7 +127,9 @@ jobs:
         run: pnpm install
       - name: Install dependencies in playground
         working-directory: ./playground
-        run: pnpm install --no-frozen-lockfile --ignore-scripts
+        run: |
+          pnpm install --no-frozen-lockfile --ignore-scripts
+          pnpm dedupe --ignore-scripts
         env:
           # Skip Cypress installation temporarily, we'll install it later with cache
           CYPRESS_INSTALL_BINARY: 0

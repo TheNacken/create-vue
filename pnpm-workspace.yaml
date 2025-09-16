@@ -1,4 +1,11 @@
 packages:
-  - 'template/base'
-  - 'template/config/**'
-  - 'template/tsconfig/**'
+  - template/base
+  - template/config/**
+  - template/tsconfig/**
+
+ignoredBuiltDependencies:
+  - '@nightwatch/nightwatch-inspector'
+  - chromedriver
+  - cypress
+  - esbuild
+  - geckodriver
