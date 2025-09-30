@@ -1,9 +1,9 @@
 {
   "name": "create-vue-enhanced",
-  "version": "3.18.1",
+  "version": "3.18.2",
   "description": "🛠️ The enhanced way to start a Vite-powered Vue project",
   "type": "module",
-  "packageManager": "pnpm@10.16.1",
+  "packageManager": "pnpm@10.17.1",
   "bin": {
     "create-vue": "bundle.js"
   },
@@ -43,19 +43,19 @@
     "@clack/prompts": "^0.11.0",
     "@tsconfig/node22": "^22.0.2",
     "@types/eslint": "^9.6.1",
-    "@types/node": "^22.18.3",
+    "@types/node": "^22.18.6",
     "@types/prompts": "^2.4.9",
     "@vue/create-eslint-config": "^0.12.1",
     "@vue/tsconfig": "^0.8.1",
     "ejs": "^3.1.10",
     "husky": "^9.1.7",
-    "lint-staged": "^16.1.6",
+    "lint-staged": "^16.2.3",
     "picocolors": "^1.1.1",
     "prettier": "3.6.2",
-    "rolldown": "1.0.0-beta.37",
+    "rolldown": "1.0.0-beta.40",
     "rollup-plugin-license": "^3.6.0",
     "vitest": "^3.2.4",
-    "zx": "^8.8.1"
+    "zx": "^8.8.4"
   },
   "lint-staged": {
     "*.{js,ts,vue,json}": [
