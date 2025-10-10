@@ -12,12 +12,12 @@ concurrency:
 
 jobs:
   release:
-    # Use Publish environment for deployment protection
     environment: Publish
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
+
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
@@ -25,19 +25,27 @@ jobs:
         with:
           node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
-      # Ensure npm 11.5.1 or later is installed
-      - name: Update npm
-        run: npm install -g npm@latest
-      - run: pnpm install
-      - name: Configure npm auth (create ~/.npmrc)
+      - name: Configure npm auth (write to active npmrc)
         run: |
-          echo "registry=https://registry.npmjs.org/" > ~/.npmrc
-          echo "always-auth=true" >> ~/.npmrc
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
-      - name: Diagnose auth (safe)
+          npmrc="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
+          echo "Using npmrc: $npmrc"
+          mkdir -p "$(dirname "$npmrc")"
+          printf "registry=https://registry.npmjs.org/\n" > "$npmrc"
+          printf "always-auth=true\n" >> "$npmrc"
+          printf "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}\n" >> "$npmrc"
+      - name: Confirm auth (safe)
         run: |
-          echo "registry: $(npm config get registry)"
+          echo "npm userconfig: $(npm config get userconfig)"
+          echo "npm registry: $(npm config get registry)"
+          if grep -q "//registry.npmjs.org/:_authToken" "${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"; then
+            echo "found auth entry in npmrc"
+          else
+            echo "auth entry not found in npmrc"
+          fi
           npm whoami || echo "NOT_LOGGED_IN"
-          npm view create-vue-enhanced --json || echo "no public info / inaccessible"
-          npm owner ls create-vue-enhanced || echo "owner list unavailable / package not present"
-      - run: pnpm publish --no-git-checks
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: pnpm publish --no-git-checks --access public
