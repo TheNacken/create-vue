@@ -29,4 +29,11 @@ jobs:
       - name: Update npm
         run: npm install -g npm@latest
       - run: pnpm install
+      - name: Diagnose auth (safe)
+        run: |
+          echo "registry: $(npm config get registry)"
+          npm whoami || echo "NOT_LOGGED_IN"
+          npm view create-vue-enhanced --json || echo "no public info / inaccessible"
+          npm owner ls create-vue-enhanced || echo "owner list unavailable / package not present"
+          
       - run: pnpm publish --no-git-checks
