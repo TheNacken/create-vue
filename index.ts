@@ -20,7 +20,6 @@ import {
 import generateReadme from './utils/generateReadme'
 import getCommand from './utils/getCommand'
 import getLanguage from './utils/getLanguage'
-import renderEslint from './utils/renderEslint'
 import { trimBoilerplate, removeCSSImport, emptyRouterConfig } from './utils/trimBoilerplate'
 
 import cliPackageJson from './package.json' with { type: 'json' }
@@ -48,7 +47,7 @@ const FEATURE_FLAGS = [
   'eslint-with-oxlint',
   'eslint-with-prettier',
   'oxlint',
-  'rolldown-vite',
+  'vite-beta',
 ] as const
 
 const FEATURE_OPTIONS = [
@@ -99,8 +98,8 @@ const EXPERIMENTAL_FEATURE_OPTIONS = [
     label: language.needsOxlint.message,
   },
   {
-    value: 'rolldown-vite',
-    label: language.needsRolldownVite.message,
+    value: 'vite-beta',
+    label: language.needsViteBeta.message,
   },
 ] as const
 
@@ -211,8 +210,8 @@ Available feature flags:
     Add Prettier for code formatting.
   --oxlint
     Add Oxlint for code quality and formatting.
-  --rolldown-vite
-    Use Rolldown Vite instead of Vite for building the project.
+  --vite-beta
+    Use Vite 8 Beta instead of Vite for building the project.
   --tailwind
     Add Tailwind CSS for styling.
   --commitlint
@@ -396,7 +395,8 @@ async function init() {
   const needsTailwind = argv.tailwind || features.includes('tailwind')
   const needsCommitlint = argv.commitlint || features.includes('commitlint')
   const needsOxlint = experimentFeatures.includes('oxlint') || argv['oxlint']
-  const needsRolldownVite = experimentFeatures.includes('rolldown-vite') || argv['rolldown-vite']
+  const needsViteBeta =
+    experimentFeatures.includes('vite-beta') || argv['vite-beta'] || argv['rolldown-vite'] // keep `rolldown-vite` for backward compatibility
 
   const { e2eFramework } = result
   const needsCypress = argv.cypress || argv.tests || e2eFramework === 'cypress'
@@ -427,8 +427,8 @@ async function init() {
   const replaceVite = () => {
     const content = fs.readFileSync(path.resolve(root, 'package.json'), 'utf-8')
     const json = JSON.parse(content)
-    // Replace `vite` with `rolldown-vite` if the feature is enabled
-    json.devDependencies.vite = 'npm:rolldown-vite@latest'
+    // Replace `vite` version with beta if the feature is enabled
+    json.devDependencies.vite = 'beta'
     fs.writeFileSync(path.resolve(root, 'package.json'), JSON.stringify(json, null, 2))
   }
   // Render base template
@@ -528,29 +528,44 @@ async function init() {
   }
 
   // Render ESLint config
-  if (needsEslint || needsOxlint) {
-    renderEslint(root, {
-      needsTypeScript,
-      needsOxlint,
-      needsVitest,
-      needsCypress,
-      needsCypressCT,
-      needsPrettier,
-      needsPlaywright,
-    })
-    render('config/eslint')
-  }
+  if (needsEslint) {
+    render('linting/base')
 
-  if (needsOxlint) {
-    render('config/oxlint')
+    if (needsTypeScript) {
+      render('linting/core/ts')
+    } else {
+      render('linting/core/js')
+    }
+
+    if (needsCypress) {
+      render('linting/cypress')
+    }
+    if (needsCypressCT) {
+      render('linting/cypress-ct')
+    }
+    if (needsPlaywright) {
+      render('linting/playwright')
+    }
+    if (needsVitest) {
+      render('linting/vitest')
+    }
+
+    // These configs only disable rules, so they should be applied last.
+    if (needsPrettier) {
+      render('linting/prettier')
+    }
+    if (needsOxlint) {
+      render('linting/oxlint')
+    }
   }
 
   if (needsPrettier) {
-    render('config/prettier')
+    render('formatting/prettier')
+    // TODO: add oxfmt option in the next PR
   }
 
-  // use rolldown-vite if the feature is enabled
-  if (needsRolldownVite) {
+  // use Vite 8 Beta if the feature is enabled
+  if (needsViteBeta) {
     replaceVite()
   }
 
@@ -648,7 +663,7 @@ async function init() {
       root,
       () => {},
       (filepath) => {
-        if (filepath.endsWith('.js') && !filepath.endsWith('eslint.config.js')) {
+        if (filepath.endsWith('.js')) {
           const tsFilePath = filepath.replace(/\.js$/, '.ts')
           if (fs.existsSync(tsFilePath)) {
             fs.unlinkSync(filepath)
@@ -727,7 +742,7 @@ async function init() {
   if (!dotGitDirectoryState.hasDotGitDirectory) {
     outroMessage += `
 ${dim('|')} ${language.infos.optionalGitCommand}
-  
+
    ${bold(green('git init && git add -A && git commit -m "initial commit"'))}`
   }
 

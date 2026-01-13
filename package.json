@@ -1,9 +1,9 @@
 {
   "name": "create-vue-enhanced",
-  "version": "3.18.4",
+  "version": "3.18.5",
   "description": "🛠️ The enhanced way to start a Vite-powered Vue project",
   "type": "module",
-  "packageManager": "pnpm@10.18.1",
+  "packageManager": "pnpm@10.28.0",
   "bin": {
     "create-vue": "bundle.js"
   },
@@ -18,7 +18,7 @@
   },
   "scripts": {
     "prepare": "husky",
-    "format": "prettier --write .",
+    "format": "prettier --write . --experimental-cli",
     "build": "rolldown -c rolldown.config.ts",
     "snapshot": "zx ./scripts/snapshot.mjs",
     "pretest": "pnpm run build && pnpm run snapshot",
@@ -41,25 +41,24 @@
   "homepage": "https://github.com/TheNacken/create-vue#readme",
   "devDependencies": {
     "@clack/prompts": "^0.11.0",
-    "@tsconfig/node22": "^22.0.2",
+    "@tsconfig/node24": "^24.0.3",
     "@types/eslint": "^9.6.1",
-    "@types/node": "^22.18.8",
+    "@types/node": "^24.10.7",
     "@types/prompts": "^2.4.9",
-    "@vue/create-eslint-config": "^0.12.2",
     "@vue/tsconfig": "^0.8.1",
     "ejs": "^3.1.10",
     "husky": "^9.1.7",
-    "lint-staged": "^16.2.3",
+    "lint-staged": "^16.2.7",
     "picocolors": "^1.1.1",
-    "prettier": "3.6.2",
-    "rolldown": "1.0.0-beta.42",
+    "prettier": "3.7.4",
+    "rolldown": "1.0.0-beta.59",
     "rollup-plugin-license": "^3.6.0",
-    "vitest": "^3.2.4",
-    "zx": "^8.8.4"
+    "vitest": "^4.0.16",
+    "zx": "^8.8.5"
   },
   "lint-staged": {
     "*.{js,ts,vue,json}": [
-      "prettier --write"
+      "prettier --write --experimental-cli"
     ]
   },
   "publishConfig": {
