@@ -19,7 +19,7 @@
     "hint": "(↑/↓ gezinmek için, boşluk seçmek için, a tümünü seçmek için, enter onaylamak için)"
   },
   "needsTypeScript": {
-    "message": "TypeScript"
+    "message": "TypeScript kullanılsın mı?"
   },
   "needsJsx": {
     "message": "JSX Desteği"
@@ -37,7 +37,7 @@
     "message": "Uçtan Uca Test"
   },
   "needsEslint": {
-    "message": "ESLint (hata önleme)"
+    "message": "Linter (hata önleme)"
   },
   "needsPrettier": {
     "message": "Prettier (kod formatlama)"
@@ -57,16 +57,8 @@
         "title": "Cypress",
         "desc": "https://www.cypress.io/",
         "hintOnComponentTesting": "ayrıca Cypress Bileşen Testi ile birim testini de destekler - https://www.cypress.io/"
-      },
-      "nightwatch": {
-        "title": "Nightwatch",
-        "desc": "https://nightwatchjs.org/",
-        "hintOnComponentTesting": "ayrıca Nightwatch Bileşen Testi ile birim testini de destekler - https://nightwatchjs.org/"
       }
     }
-  },
-  "needsOxlint": {
-    "message": "Oxlint"
   },
   "needsExperimental": {
     "message": "Deneysel özellikleri etkinleştir"
@@ -75,11 +67,18 @@
     "message": "Dahil edilecek deneysel özellikleri seçin:",
     "hint": "(↑/↓ gezinmek için, boşluk seçmek için, a tümünü seçmek için, enter onaylamak için)"
   },
-  "needsViteBeta": {
-    "message": "Vite 8 (beta)"
+  "needsVueBeta": {
+    "message": "Vue 3.6 (beta)"
+  },
+  "needsOxfmt": {
+    "message": "Prettier'ı Oxfmt ile değiştir"
   },
   "needsBareboneTemplates": {
     "message": "Tüm örnek kodları atlayıp boş bir Vue projesi ile başlansın mı?"
+  },
+  "packageManagerSelection": {
+    "message": "Hangi paket yöneticisini kullanacaksınız?",
+    "hint": "(Vue 3.6 beta, paket yöneticisine özgü sürüm geçersiz kılmaları gerektirir)"
   },
   "errors": {
     "operationCancelled": "İşlem iptal edildi"

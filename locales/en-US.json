@@ -19,7 +19,7 @@
     "hint": "(↑/↓ to navigate, space to select, a to toggle all, enter to confirm)"
   },
   "needsTypeScript": {
-    "message": "TypeScript"
+    "message": "Use TypeScript?"
   },
   "needsJsx": {
     "message": "JSX Support"
@@ -37,7 +37,7 @@
     "message": "End-to-End Testing"
   },
   "needsEslint": {
-    "message": "ESLint (error prevention)"
+    "message": "Linter (error prevention)"
   },
   "needsPrettier": {
     "message": "Prettier (code formatting)"
@@ -57,16 +57,8 @@
         "title": "Cypress",
         "desc": "https://www.cypress.io/",
         "hintOnComponentTesting": "also supports unit testing with Cypress Component Testing - https://www.cypress.io/"
-      },
-      "nightwatch": {
-        "title": "Nightwatch",
-        "desc": "https://nightwatchjs.org/",
-        "hintOnComponentTesting": "also supports unit testing with Nightwatch Component Testing - https://nightwatchjs.org/"
       }
     }
-  },
-  "needsOxlint": {
-    "message": "Oxlint"
   },
   "needsExperimental": {
     "message": "Enable experimental features"
@@ -75,11 +67,18 @@
     "message": "Select experimental features to include in your project:",
     "hint": "(↑/↓ to navigate, space to select, a to toggle all, enter to confirm)"
   },
-  "needsViteBeta": {
-    "message": "Vite 8 (beta)"
+  "needsVueBeta": {
+    "message": "Vue 3.6 (beta)"
+  },
+  "needsOxfmt": {
+    "message": "Replace Prettier with Oxfmt"
   },
   "needsBareboneTemplates": {
     "message": "Skip all example code and start with a blank Vue project?"
+  },
+  "packageManagerSelection": {
+    "message": "Which package manager will you use?",
+    "hint": "(Vue 3.6 beta requires version overrides that differ per package manager)"
   },
   "errors": {
     "operationCancelled": "Operation cancelled"

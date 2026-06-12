@@ -21,6 +21,12 @@ import generateReadme from './utils/generateReadme'
 import getCommand from './utils/getCommand'
 import getLanguage from './utils/getLanguage'
 import { trimBoilerplate, removeCSSImport, emptyRouterConfig } from './utils/trimBoilerplate'
+import applyVueBeta from './utils/applyVueBeta'
+import {
+  inferPackageManager,
+  getPackageManagerOptions,
+  type PackageManager,
+} from './utils/packageManager'
 
 import cliPackageJson from './package.json' with { type: 'json' }
 
@@ -38,7 +44,6 @@ const FEATURE_FLAGS = [
   'with-tests',
   'vitest',
   'cypress',
-  'nightwatch',
   'playwright',
   'eslint',
   'prettier',
@@ -47,14 +52,11 @@ const FEATURE_FLAGS = [
   'eslint-with-oxlint',
   'eslint-with-prettier',
   'oxlint',
-  'vite-beta',
+  'oxfmt',
+  'vue-beta',
 ] as const
 
 const FEATURE_OPTIONS = [
-  {
-    value: 'typescript',
-    label: language.needsTypeScript.message,
-  },
   {
     value: 'jsx',
     label: language.needsJsx.message,
@@ -94,12 +96,12 @@ const FEATURE_OPTIONS = [
 ] as const
 const EXPERIMENTAL_FEATURE_OPTIONS = [
   {
-    value: 'oxlint',
-    label: language.needsOxlint.message,
+    value: 'oxfmt',
+    label: language.needsOxfmt.message,
   },
   {
-    value: 'vite-beta',
-    label: language.needsViteBeta.message,
+    value: 'vue-beta',
+    label: language.needsVueBeta.message,
   },
 ] as const
 
@@ -107,10 +109,12 @@ type PromptResult = {
   projectName?: string
   shouldOverwrite?: boolean
   packageName?: string
+  needsTypeScript?: boolean
   features?: (typeof FEATURE_OPTIONS)[number]['value'][]
-  e2eFramework?: 'cypress' | 'nightwatch' | 'playwright'
+  e2eFramework?: 'cypress' | 'playwright'
   experimentFeatures?: (typeof EXPERIMENTAL_FEATURE_OPTIONS)[number]['value'][]
   needsBareboneTemplates?: boolean
+  packageManager?: PackageManager
 }
 
 function isValidPackageName(projectName) {
@@ -169,7 +173,7 @@ const helpMessage = `\
 Usage: create-vue [FEATURE_FLAGS...] [OPTIONS...] [DIRECTORY]
 
 Create a new Vue.js project.
-Start the CLI in interactive mode when no FEATURE_FLAGS is provided, or if the DIRECTORY argument is not a valid package name.
+Runs in interactive mode if started without feature flags, or if DIRECTORY is missing or not a valid package name.
 
 Options:
   --force
@@ -199,19 +203,14 @@ Available feature flags:
     If used without ${cyan('--vitest')}, it will also add Cypress Component Testing.
   --playwright
     Add Playwright for end-to-end testing.
-  --nightwatch
-    Add Nightwatch for end-to-end testing.
-    If used without ${cyan('--vitest')}, it will also add Nightwatch Component Testing.
   --eslint
     Add ESLint for code quality.
-  --eslint-with-prettier (Deprecated in favor of ${cyan('--eslint --prettier')})
-    Add Prettier for code formatting in addition to ESLint.
   --prettier
     Add Prettier for code formatting.
-  --oxlint
-    Add Oxlint for code quality and formatting.
-  --vite-beta
-    Use Vite 8 Beta instead of Vite for building the project.
+  --oxfmt
+    Add Oxfmt for code formatting.
+  --vue-beta
+    Use Vue 3.6 Beta. Requires specifying a package manager in interactive mode.
   --tailwind
     Add Tailwind CSS for styling.
   --commitlint
@@ -221,6 +220,12 @@ Unstable feature flags:
   --tests, --with-tests
     Add both unit testing and end-to-end testing support.
     Currently equivalent to ${cyan('--vitest --cypress')}, but may change in the future.
+
+Deprecated feature flags:
+  --eslint-with-prettier
+    Please use ${cyan('--eslint --prettier')} instead.
+  --oxlint
+    Oxlint is now always included when ESLint is selected.
 `
 
 async function init() {
@@ -259,6 +264,9 @@ async function init() {
 
   const forceOverwrite = argv.force
 
+  // Infer package manager from user agent early so we can use it in prompts
+  const inferredPackageManager = inferPackageManager()
+
   const result: PromptResult = {
     projectName: defaultProjectName,
     shouldOverwrite: forceOverwrite,
@@ -284,12 +292,11 @@ async function init() {
         placeholder: defaultProjectName,
         defaultValue: defaultProjectName,
         validate: (value) =>
-          value.length === 0 || value.trim().length > 0
-            ? undefined
-            : language.projectName.invalidMessage,
+          !value || value.trim().length > 0 ? undefined : language.projectName.invalidMessage,
       }),
     )
-    targetDir = result.projectName = result.packageName = _result.trim()
+    const projectName = _result?.trim() || defaultProjectName
+    targetDir = result.projectName = result.packageName = projectName
   }
 
   if (!canSkipEmptying(targetDir) && !forceOverwrite) {
@@ -322,6 +329,13 @@ async function init() {
   }
 
   if (!isFeatureFlagsUsed) {
+    result.needsTypeScript = await unwrapPrompt(
+      confirm({
+        message: language.needsTypeScript.message,
+        initialValue: true,
+      }),
+    )
+
     result.features = await unwrapPrompt(
       multiselect({
         message: `${language.featureSelection.message} ${dim(language.featureSelection.hint)}`,
@@ -349,13 +363,6 @@ async function init() {
                 ? language.e2eSelection.selectOptions.cypress.desc
                 : language.e2eSelection.selectOptions.cypress.hintOnComponentTesting!,
             },
-            {
-              value: 'nightwatch',
-              label: language.e2eSelection.selectOptions.nightwatch.title,
-              hint: hasVitest
-                ? language.e2eSelection.selectOptions.nightwatch.desc
-                : language.e2eSelection.selectOptions.nightwatch.hintOnComponentTesting!,
-            },
           ],
         }),
       )
@@ -368,6 +375,21 @@ async function init() {
         required: false,
       }),
     )
+
+    // Ask for package manager if Vue 3.6 beta is selected (needed for correct overrides)
+    if (result.experimentFeatures.includes('vue-beta')) {
+      const packageManagerOptions = getPackageManagerOptions(inferredPackageManager).map((pm) => ({
+        value: pm,
+        label: pm,
+      }))
+
+      result.packageManager = await unwrapPrompt(
+        select({
+          message: `${language.packageManagerSelection.message} ${dim(language.packageManagerSelection.hint)}`,
+          options: packageManagerOptions,
+        }),
+      )
+    }
   }
 
   if (argv.bare) {
@@ -384,25 +406,23 @@ async function init() {
 
   const { features, experimentFeatures, needsBareboneTemplates } = result
 
-  const needsTypeScript = argv.ts || argv.typescript || features.includes('typescript')
+  const needsTypeScript = argv.ts || argv.typescript || result.needsTypeScript
   const needsJsx = argv.jsx || features.includes('jsx')
   const needsRouter = argv.router || argv['vue-router'] || features.includes('router')
   const needsPinia = argv.pinia || features.includes('pinia')
-  const needsVitest = argv.vitest || argv.tests || features.includes('vitest')
+  const needsVitest = argv.vitest || argv.tests || argv['with-tests'] || features.includes('vitest')
   const needsEslint = argv.eslint || argv['eslint-with-prettier'] || features.includes('eslint')
   const needsPrettier =
     argv.prettier || argv['eslint-with-prettier'] || features.includes('prettier')
   const needsTailwind = argv.tailwind || features.includes('tailwind')
   const needsCommitlint = argv.commitlint || features.includes('commitlint')
-  const needsOxlint = experimentFeatures.includes('oxlint') || argv['oxlint']
-  const needsViteBeta =
-    experimentFeatures.includes('vite-beta') || argv['vite-beta'] || argv['rolldown-vite'] // keep `rolldown-vite` for backward compatibility
+  const needsOxfmt = experimentFeatures.includes('oxfmt') || argv['oxfmt']
+  const needsVueBeta = experimentFeatures.includes('vue-beta') || argv['vue-beta']
 
   const { e2eFramework } = result
-  const needsCypress = argv.cypress || argv.tests || e2eFramework === 'cypress'
+  const needsCypress =
+    argv.cypress || argv.tests || argv['with-tests'] || e2eFramework === 'cypress'
   const needsCypressCT = needsCypress && !needsVitest
-  const needsNightwatch = argv.nightwatch || e2eFramework === 'nightwatch'
-  const needsNightwatchCT = needsNightwatch && !needsVitest
   const needsPlaywright = argv.playwright || e2eFramework === 'playwright'
 
   const root = path.join(cwd, targetDir)
@@ -423,13 +443,6 @@ async function init() {
   const render = function render(templateName) {
     const templateDir = path.resolve(templateRoot, templateName)
     renderTemplate(templateDir, root, callbacks)
-  }
-  const replaceVite = () => {
-    const content = fs.readFileSync(path.resolve(root, 'package.json'), 'utf-8')
-    const json = JSON.parse(content)
-    // Replace `vite` version with beta if the feature is enabled
-    json.devDependencies.vite = 'beta'
-    fs.writeFileSync(path.resolve(root, 'package.json'), JSON.stringify(json, null, 2))
   }
   // Render base template
   render('base')
@@ -452,12 +465,6 @@ async function init() {
   }
   if (needsCypressCT) {
     render('config/cypress-ct')
-  }
-  if (needsNightwatch) {
-    render('config/nightwatch')
-  }
-  if (needsNightwatchCT) {
-    render('config/nightwatch-ct')
   }
   if (needsPlaywright) {
     render('config/playwright')
@@ -484,14 +491,6 @@ async function init() {
     }
     if (needsCypress) {
       render('tsconfig/cypress')
-      // Cypress uses `ts-node` internally, which doesn't support solution-style tsconfig.
-      // So we have to set a dummy `compilerOptions` in the root tsconfig to make it work.
-      // I use `NodeNext` here instead of `ES2015` because that's what the actual environment is.
-      // (Cypress uses the ts-node/esm loader when `type: module` is specified in package.json.)
-      // @ts-ignore
-      rootTsConfig.compilerOptions = {
-        module: 'NodeNext',
-      }
     }
     if (needsCypressCT) {
       render('tsconfig/cypress-ct')
@@ -509,16 +508,6 @@ async function init() {
       rootTsConfig.references.push({
         path: './tsconfig.vitest.json',
       })
-    }
-    if (needsNightwatch) {
-      render('tsconfig/nightwatch')
-      // Nightwatch needs a standalone tsconfig, but in a different folder.
-      rootTsConfig.references.push({
-        path: './nightwatch/tsconfig.json',
-      })
-    }
-    if (needsNightwatchCT) {
-      render('tsconfig/nightwatch-ct')
     }
     fs.writeFileSync(
       path.resolve(root, 'tsconfig.json'),
@@ -551,22 +540,21 @@ async function init() {
     }
 
     // These configs only disable rules, so they should be applied last.
-    if (needsPrettier) {
-      render('linting/prettier')
-    }
-    if (needsOxlint) {
-      render('linting/oxlint')
+    render('linting/oxlint')
+    // Provide data for the oxlintrc.json template
+    callbacks.push(async (dataStore) => {
+      const oxlintrcPath = path.resolve(root, '.oxlintrc.json')
+      dataStore[oxlintrcPath] = { needsTypeScript, needsVitest }
+    })
+    if (needsPrettier || needsOxfmt) {
+      render('linting/formatter')
     }
   }
 
-  if (needsPrettier) {
+  if (needsOxfmt) {
+    render('formatting/oxfmt')
+  } else if (needsPrettier) {
     render('formatting/prettier')
-    // TODO: add oxfmt option in the next PR
-  }
-
-  // use Vite 8 Beta if the feature is enabled
-  if (needsViteBeta) {
-    replaceVite()
   }
 
   if (needsTailwind) {
@@ -639,9 +627,6 @@ async function init() {
     if (needsCypressCT) {
       render('bare/cypress-ct')
     }
-    if (needsNightwatchCT) {
-      render('bare/nightwatch-ct')
-    }
   }
 
   // Cleanup.
@@ -700,16 +685,16 @@ async function init() {
     }
   }
 
-  // Instructions:
-  // Supported package managers: pnpm > yarn > bun > npm
-  const userAgent = process.env.npm_config_user_agent ?? ''
-  const packageManager = /pnpm/.test(userAgent)
-    ? 'pnpm'
-    : /yarn/.test(userAgent)
-      ? 'yarn'
-      : /bun/.test(userAgent)
-        ? 'bun'
-        : 'npm'
+  // Use the package manager selected by user for Vue 3.6 beta, or inferred from user agent
+  const packageManager = result.packageManager ?? inferredPackageManager
+
+  // Apply Vue 3.6 Beta overrides if the feature is enabled
+  if (needsVueBeta) {
+    const pkgPath = path.resolve(root, 'package.json')
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
+    applyVueBeta(root, packageManager, pkg)
+    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
+  }
 
   // README generation
   fs.writeFileSync(
@@ -720,9 +705,7 @@ async function init() {
       needsTypeScript,
       needsVitest,
       needsCypress,
-      needsNightwatch,
       needsPlaywright,
-      needsNightwatchCT,
       needsCypressCT,
       needsEslint,
     }),
@@ -734,7 +717,7 @@ async function init() {
     outroMessage += `   ${bold(green(`cd ${cdProjectName.includes(' ') ? `"${cdProjectName}"` : cdProjectName}`))}\n`
   }
   outroMessage += `   ${bold(green(getCommand(packageManager, 'install')))}\n`
-  if (needsPrettier) {
+  if (needsPrettier || needsOxfmt) {
     outroMessage += `   ${bold(green(getCommand(packageManager, 'format')))}\n`
   }
   outroMessage += `   ${bold(green(getCommand(packageManager, 'dev')))}\n`
