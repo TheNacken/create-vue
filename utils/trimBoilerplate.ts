@@ -16,6 +16,19 @@ export function trimBoilerplate(rootDir: string) {
       continue
     }
     const fullpath = path.resolve(srcDir, filename)
+
+    if (filename === 'assets') {
+      if (fs.existsSync(fullpath)) {
+        for (const assetFile of fs.readdirSync(fullpath)) {
+          if (assetFile === 'tailwind.css') {
+            continue
+          }
+          fs.rmSync(path.resolve(fullpath, assetFile), { recursive: true })
+        }
+      }
+      continue
+    }
+
     fs.rmSync(fullpath, { recursive: true })
   }
 }
